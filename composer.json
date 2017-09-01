@@ -1,0 +1,24 @@
+{
+  "name": "keshunchen/baiduocr",
+  "description": "Baidu OCR API for Laravel",
+  "keywords": ["ocr", "baidu", "chinese"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "keshunchen",
+      "email": "keshunchen@qq.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Keshunchen\\Baiduocr\\": "src/"
+    },
+    "files": [
+      "aip-ocr-php-sdk/AipOcr.php"
+    ]
+  },
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=5.5.9"
+  }
+}
