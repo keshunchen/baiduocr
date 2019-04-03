@@ -17,7 +17,6 @@
 
 require_once 'AipHttpClient.php';
 require_once 'AipBCEUtil.php';
-require_once 'AipImageUtil.php';
 
 /**
  * Aip Base 基类
@@ -30,6 +29,12 @@ class AipBase {
      */
     protected $accessTokenUrl = 'https://aip.baidubce.com/oauth/2.0/token';
 
+     /**
+     * 反馈接口
+     * @var string
+     */
+    protected $reportUrl = 'https://aip.baidubce.com/rpc/2.0/feedback/v1/report';
+
     /**
      * appId
      * @var string
@@ -41,7 +46,7 @@ class AipBase {
      * @var string
      */
     protected $apiKey = '';
-    
+
     /**
      * secretKey
      * @var string
@@ -55,7 +60,7 @@ class AipBase {
     protected $scope = 'brain_all_scope';
 
     /**
-     * @param string $appId 
+     * @param string $appId
      * @param string $apiKey
      * @param string $secretKey
      */
@@ -65,17 +70,18 @@ class AipBase {
         $this->secretKey = trim($secretKey);
         $this->isCloudUser = null;
         $this->client = new AipHttpClient();
-        $this->version = '1_6_4';
+        $this->version = '2_2_12';
+        $this->proxies = array();
     }
 
     /**
      * 查看版本
      * @return string
-     * 
+     *
      */
     public function getVersion(){
         return $this->version;
-    }    
+    }
 
     /**
      * 连接超时
@@ -91,6 +97,16 @@ class AipBase {
      */
     public function setSocketTimeoutInMillis($ms){
         $this->client->setSocketTimeoutInMillis($ms);
+    }
+
+    /**
+     * 代理
+     * @param array $proxy
+     * @return string
+     *
+     */
+    public function setProxies($proxies){
+        $this->client->setConf($proxies);
     }
 
     /**
@@ -127,10 +143,10 @@ class AipBase {
 
             // 特殊处理
             $this->proccessRequest($url, $params, $data, $headers);
- 
+
             $headers = $this->getAuthHeaders('POST', $url, $params, $headers);
             $response = $this->client->post($url, $data, $params, $headers);
- 
+
             $obj = $this->proccessResult($response['content']);
 
             if(!$this->isCloudUser && isset($obj['error_code']) && $obj['error_code'] == 110){
@@ -295,8 +311,8 @@ class AipBase {
 
     /**
      * 判断认证是否有权限
-     * @param  array   $authObj 
-     * @return boolean          
+     * @param  array   $authObj
+     * @return boolean
      */
     protected function isPermission($authObj)
     {
@@ -316,14 +332,14 @@ class AipBase {
      * @return array
      */
     private function getAuthHeaders($method, $url, $params=array(), $headers=array()){
-        
+
         //不是云的老用户则不用在header中签名 认证
         if($this->isCloudUser === false){
             return $headers;
         }
 
         $obj = parse_url($url);
-        if(!empty($obj['query'])){        
+        if(!empty($obj['query'])){
             foreach(explode('&', $obj['query']) as $kv){
                 if(!empty($kv)){
                     list($k, $v) = explode('=', $kv, 2);
@@ -347,6 +363,32 @@ class AipBase {
         ));
 
         return $headers;
+    }
+
+    /**
+     * 反馈
+     *
+     * @param array $feedbacks
+     * @return array
+     */
+    public function report($feedback){
+
+        $data = array();
+
+        $data['feedback'] = $feedback;
+
+        return $this->request($this->reportUrl, $data);
+    }
+
+    /**
+     * 通用接口
+     * @param string $url
+     * @param array $data
+     * @param array header
+     * @return array
+     */
+    public function post($url, $data, $headers=array()){
+        return $this->request($url, $data, $headers);
     }
 
 }
